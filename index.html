@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Adoption Is Exploding</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
+font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+background:#0b0f19;
+color: rgba(255, 255, 255, 0.92); 
+overflow-x:hidden;
+}
+
+/* ================== 全局动态背景层 ================== */
+#dynamic-bg {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -4; 
+    background: 
+        radial-gradient(circle at 20% 30%, rgba(96,165,250,0.12), transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(168,85,247,0.12), transparent 50%);
+    animation: bgPulse 12s infinite alternate ease-in-out;
+}
+#white-bg-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -3; 
+    background: #fbfbfd; 
+    opacity: 0; will-change: opacity;
+}
+#light-dynamic-bg {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2; 
+    background: 
+        radial-gradient(circle at 30% 70%, rgba(0, 113, 227, 0.05), transparent 50%),
+        radial-gradient(circle at 70% 30%, rgba(168, 85, 247, 0.03), transparent 50%);
+    opacity: 0; will-change: opacity;
+    animation: bgPulse 15s infinite alternate ease-in-out reverse;
+}
+@keyframes bgPulse {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.15) rotate(2deg); }
+}
+
+canvas#particles{
+    position:fixed; top:0; left:0; z-index:-1; filter:blur(1px);
+}
+
+/* ================== 全局闲置提示 ================== */
+.global-scroll-hint {
+    position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+    text-align: center; opacity: 0; transition: opacity 0.8s ease; z-index: 999;
+    color: rgba(255, 255, 255, 0.5); pointer-events: none; font-size: 13px; letter-spacing: 1px;
+}
+.global-scroll-hint.visible { opacity: 1; }
+.global-scroll-hint.dark-mode { color: rgba(29, 29, 31, 0.5); }
+.global-scroll-hint.dark-mode .mouse-icon { border-color: rgba(29, 29, 31, 0.5); }
+.global-scroll-hint.dark-mode .mouse-icon::after { background: rgba(29, 29, 31, 0.5); }
+
+.mouse-icon {
+    width: 22px; height: 34px; border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 12px; margin: 0 auto 8px auto; position: relative; transition: all 0.5s ease;
+}
+.mouse-icon::after {
+    content: ""; width: 4px; height: 6px; background: rgba(255, 255, 255, 0.5);
+    position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
+    border-radius: 2px; animation: wheelDrop 1.5s infinite ease-in-out; transition: all 0.5s ease;
+}
+@keyframes wheelDrop { 0% { opacity: 0; top: 6px; } 30% { opacity: 1; } 100% { opacity: 0; top: 16px; } }
+
+/* ================== 前序宏观滚屏区 ================== */
+.scroll-container { height: 320vh; position: relative; z-index: 2; }
+.scene { position: relative; width: 100vw; z-index: 3; background: transparent; }
+.sticky-panel { position: sticky; top: 0; height: 100vh; width: 100%; overflow: hidden; }
+
+/* 首页排版 */
+.hero{ position:sticky; top:0; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; will-change: transform, opacity; }
+.title-wrapper{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; }
+.main-title{ font-size:clamp(40px,8vw,110px); font-weight:700; letter-spacing:-2px; line-height:1.05; }
+.second-title{ font-size:clamp(20px,4vw,56px); font-weight:600; color:#9fb2ff; line-height:1.2; }
+.subtitle{ max-width:760px; margin-top:50px; padding: 0 20px; font-size: clamp(15px, 2vw, 18px); line-height:1.7; color:#9aa3b2; opacity:0; transform:translateY(20px); }
+.author{ margin-top:28px; font-size:13px; color:#7d8696; opacity:0; }
+.scroll{ position:absolute; bottom:60px; font-size:14px; color:#aeb7ff; opacity:0.9; }
+.scroll span{ display:block; font-size:26px; animation:bounce 1.8s infinite; }
+
+/* 简短问句页 */
+.intro-text-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90vw; text-align: center; display: flex; flex-direction: column; align-items: center; }
+.intro-title { font-size: clamp(28px, 5vw, 64px); font-weight: 700; line-height: 1.2; will-change: transform; }
+.intro-subtitle { font-size: clamp(16px, 3vw, 24px); color: #9fb2ff; margin-top: 30px; opacity: 0; max-width: 800px; line-height: 1.6; }
+
+/* 数据页排版 */
+.data-text-wrapper { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 75vw; max-width: 700px; text-align: center; display: flex; flex-direction: column; align-items: center; will-change: transform, opacity; }
+.data-title { font-size: clamp(24px, 4vw, 42px); font-weight: 700; margin-bottom: 20px; opacity: 0; }
+.data-content { opacity: 0; display: flex; flex-direction: column; align-items: center; }
+.big-number { font-size: clamp(48px, 8vw, 72px); font-weight: 700; color: #60a5fa; line-height: 1; margin-bottom: 15px; }
+.data-desc { font-size: clamp(15px, 2vw, 20px); line-height: 1.6; color: #e2e8f0; margin-bottom: 20px; }
+.source { font-size: 13px; color: #64748b; }
+
+/* 图表容器 */
+.chart-box { position: absolute; opacity: 0; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 24px; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4); top: 50%; right: 8vw; transform: translateY(-50%) translateX(50px); width: 36vw; }
+.chart-inner { position: relative; width: 100%; height: 30vh; min-height: 220px; }
+
+/* 圆环图表 */
+.doughnut-container { position: relative; width: 100%; aspect-ratio: 1; max-height: 35vh; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+.doughnut-svg { width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
+.circle-bg { fill: none; stroke: rgba(255, 255, 255, 0.05); stroke-width: 8; }
+.circle-line { fill: none; stroke: #a855f7; stroke-width: 8; stroke-linecap: round; stroke-dasharray: 263.89; stroke-dashoffset: 263.89; }
+.doughnut-center-text { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.doughnut-number { font-size: clamp(48px, 6vw, 80px); font-weight: 700; color: #a855f7; line-height: 1; display: flex; align-items: baseline; }
+.doughnut-percent { font-size: 0.5em; margin-left: 2px; }
+.doughnut-label { font-size: 14px; color: #9aa3b2; margin-top: 8px; letter-spacing: 1px; text-transform: uppercase; }
+
+/* 黑暗疑问定格 */
+.transition-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90vw; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 30px; }
+.trans-line { opacity: 0; will-change: opacity, transform; }
+.trans-line-1 { font-size: clamp(28px, 5vw, 56px); font-weight: 600; color: #e2e8f0; }
+.trans-line-2 { font-size: clamp(22px, 3.5vw, 36px); color: #9fb2ff; }
+.trans-line-3 { font-size: clamp(32px, 6vw, 72px); font-weight: 700; color: #ffffff; margin-top: 20px; }
+
+/* 层叠推演文本区 */
+.s7-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.s7-layer-text { position: absolute; top: 50%; left: 50%; width: 90vw; max-width: 800px; font-size: clamp(22px, 4vw, 42px); font-weight: 600; line-height: 1.45; letter-spacing: -0.015em; text-align: center; color: rgba(255,255,255,0.92); opacity: 0; transform: translate(-50%, -50%) scale(1); will-change: opacity, transform, filter; }
+
+/* 终极黑白翻转过渡句 */
+.s8-text-box { position: absolute; top: 50%; left: 50%; width: 90vw; max-width: 960px; font-size: clamp(26px, 4.5vw, 48px); font-weight: 700; line-height: 1.35; letter-spacing: -0.02em; text-align: center; color: rgba(255,255,255,0.92); opacity: 0; transform: translate(-50%, -50%) scale(1); will-change: opacity, transform, color; }
+
+@media (max-width: 768px) {
+    .chart-box { width: 90vw; right: auto; left: 50%; }
+}
+
+
+/* ================== 新闻特稿区块 (白昼世界) ================== */
+.editorial-wrapper {
+    position: relative; z-index: 10; background: transparent; 
+    width: 100vw; color: #1d1d1f; padding-bottom: 50px; padding-top: 50px;
+}
+
+/* 报头容器 */
+.ed-header {
+    max-width: 1200px; margin: 0 auto 120px auto; padding: 0 40px;
+}
+.ed-main-title {
+    font-size: clamp(36px, 5.5vw, 72px); font-weight: 800; letter-spacing: -0.02em;
+    color: #1d1d1f; margin-bottom: 40px; line-height: 1.1; max-width: 1400px;
+}
+.ed-divider {
+    border: none; height: 2px; background: rgba(0,0,0,0.08); margin-bottom: 50px; width: 100%;
+}
+
+/* 左右分栏导语网格 */
+.ed-lead-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 80px;
+}
+.ed-lead-sub {
+    display: block; margin-bottom: 12px; font-size: clamp(20px, 2vw, 26px); 
+    font-weight: 500; color: #86868b; font-style: italic; line-height: 1.4;
+}
+.ed-lead-highlight {
+    font-size: clamp(32px, 4vw, 48px); font-weight: 800; color: #1d1d1f; 
+    line-height: 1.25; letter-spacing: -0.02em;
+}
+.ed-lead-text p {
+    font-size: 20px; line-height: 1.7; color: #424245; margin-bottom: 24px;
+}
+.ed-lead-text .lead-question {
+    font-size: clamp(24px, 3vw, 32px); font-weight: 800; color: #1d1d1f; margin-top: 10px; line-height: 1.3;
+}
+
+/* 经典的错位布局 */
+.ed-row {
+    display: grid; grid-template-columns: 4fr 5fr; gap: 80px; max-width: 1200px;
+    margin: 0 auto 150px auto; padding: 0 40px; align-items: center;
+}
+.ed-row.reverse { grid-template-columns: 5fr 4fr; }
+.ed-row.reverse .ed-text { order: 2; }
+.ed-row.reverse .ed-chart-container { order: 1; }
+
+.ed-text p { font-size: 20px; line-height: 1.7; color: #424245; margin-bottom: 24px; }
+.ed-text p:first-child { font-size: 26px; font-weight: 700; color: #1d1d1f; letter-spacing: -0.01em; line-height: 1.4; margin-bottom: 28px; }
+
+/* 升级版 Apple 高亮动画 (加厚填充) */
+.highlight {
+    background: linear-gradient(120deg, rgba(0, 113, 227, 0.22) 0%, rgba(0, 113, 227, 0.1) 100%);
+    background-repeat: no-repeat; background-size: 0% 100%; background-position: 0 50%;
+    transition: background-size 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) 0.6s;
+    font-weight: 600; color: #1d1d1f; padding: 2px 6px; border-radius: 6px;
+}
+.visible .highlight { background-size: 100% 100%; }
+
+/* 巨型独立引语及其诠释 */
+.ed-pull-quote-wrapper {
+    max-width: 1000px; margin: 0 auto 160px auto; padding: 0 40px; text-align: center;
+}
+.ed-pull-quote {
+    font-size: clamp(32px, 5vw, 54px); font-weight: 700; color: #1d1d1f;
+    font-style: italic; letter-spacing: -0.02em; line-height: 1.3;
+}
+.ed-pull-quote-sub {
+    font-size: 20px; font-weight: 500; color: #86868b; margin-top: 20px; 
+    font-style: normal; letter-spacing: 0;
+}
+
+/* 连接下一部分的 Bridge */
+.ed-bridge {
+    max-width: 800px; margin: 60px auto 100px auto; padding: 60px 40px 0 40px;
+    text-align: center; border-top: 1px solid rgba(0,0,0,0.08);
+    font-size: clamp(20px, 3vw, 26px); font-weight: 600; color: #1d1d1f; line-height: 1.5;
+}
+
+/* 图表卡片 */
+.ed-chart-card {
+    background: #ffffff; padding: 30px; border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.05); position: relative;
+}
+.ed-chart-title { font-size: 24px; font-weight: 700; margin-bottom: 6px; color: #1d1d1f;}
+.ed-chart-subtitle { font-size: 14px; color: #86868b; margin-bottom: 24px; }
+.ed-chart-note { margin-top: 16px; font-size: 13px; color: #86868b; }
+.ed-tabs { display: flex; justify-content: center; gap: 10px; margin-top: 25px; }
+.ed-tab { padding: 8px 18px; border-radius: 20px; cursor: pointer; background: #f5f5f7; font-size: 14px; font-weight: 600; color: #424245; transition: all 0.2s; }
+.ed-tab.active { background: #0071e3; color: white; }
+
+/* 悬浮提示框 */
+.ed-tooltip {
+    position: absolute; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    padding: 16px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); width: 280px; font-size: 14px; line-height: 1.5;
+    display: none; z-index: 100; border: 1px solid rgba(0,0,0,0.05); pointer-events: none;
+}
+.ed-tt-title { font-weight: 700; font-size: 16px; color: #1d1d1f; }
+.ed-tt-value { font-size: 26px; font-weight: 700; color: #0071e3; margin: 4px 0 8px 0; }
+.ed-tt-desc { color: #424245; margin-bottom: 8px; }
+.ed-tt-source { font-size: 12px; color: #86868b; }
+.ed-tt-link a { color: #0071e3; text-decoration: none; font-size: 12px; pointer-events: auto; }
+
+/* Scroll Fade Up 动画 */
+.reveal-up { opacity: 0; transform: translateY(50px); transition: opacity 1s cubic-bezier(0.2, 0.8, 0.2, 1), transform 1s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.reveal-up.visible { opacity: 1; transform: translateY(0); }
+
+
+/* ================== 沉浸式音频叙事区块 (Audio Narrative) ================== */
+.ed-audio-section {
+    max-width: 860px; margin: 0 auto 120px auto; padding: 0 40px;
+    display: flex; flex-direction: column; gap: 80px;
+}
+
+.ed-audio-header {
+    text-align: center; margin-bottom: -20px;
+}
+.ed-audio-header h2 {
+    font-size: clamp(28px, 4vw, 42px); font-weight: 800; color: #1d1d1f; letter-spacing: -0.01em; margin-bottom: 12px;
+}
+.ed-audio-header p {
+    font-size: 20px; color: #86868b; font-weight: 500;
+}
+
+/* 常规音频卡片 */
+.audio-card {
+    background: #ffffff; border-radius: 24px; padding: 40px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.05);
+    display: flex; flex-direction: column;
+}
+.audio-badge {
+    font-size: 13px; font-weight: 700; color: #0071e3; text-transform: uppercase; 
+    letter-spacing: 1.5px; margin-bottom: 16px; display: inline-block;
+}
+.audio-context {
+    font-size: 18px; color: #424245; line-height: 1.6; margin-bottom: 30px; font-weight: 500;
+}
+.audio-player-wrapper audio {
+    width: 100%; height: 54px; border-radius: 27px; outline: none; background-color: #f5f5f7;
+}
+
+/* 强化音频卡片 (Featured - 凸显依赖) */
+.featured-audio-card {
+    background: #f0f4f8; /* 微蓝灰底色衬托 */
+    border: 1px solid rgba(0, 113, 227, 0.15);
+    transform: scale(1.02);
+    box-shadow: 0 20px 50px rgba(0, 113, 227, 0.1);
+}
+.featured-audio-card .audio-badge { color: #005bb5; }
+.featured-audio-card .audio-context { color: #1d1d1f; font-size: 20px; }
+
+/* 逐句文本剧本 (Transcript Timeline) */
+.audio-transcript {
+    margin-top: 30px; padding-top: 30px; border-top: 1px solid rgba(0,0,0,0.06);
+    display: flex; flex-direction: column; gap: 14px;
+}
+.featured-audio-card .audio-transcript {
+    border-top: 1px solid rgba(0, 113, 227, 0.1);
+}
+.tr-line {
+    font-size: 18px; color: #86868b; line-height: 1.5; display: flex; gap: 16px;
+    font-style: italic; transition: color 0.25s, background-color 0.25s, transform 0.25s;
+    padding: 8px 10px; border-radius: 12px;
+}
+.tr-line.active-tr {
+    color: #1d1d1f; background: rgba(0,113,227,0.08); font-weight: 600; font-style: normal;
+    transform: translateX(4px);
+}
+.featured-audio-card .tr-line.active-tr {
+    color: #005bb5; background: rgba(0,113,227,0.10);
+}
+.tr-line .time {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 14px; color: #a1a1a6; font-style: normal; margin-top: 3px;
+}
+.tr-line.highlight-tr {
+    color: #1d1d1f; font-weight: 600; font-style: normal;
+}
+.featured-audio-card .tr-line.highlight-tr {
+    color: #0071e3; font-size: 22px; /* 进一步放大依赖情绪金句 */
+}
+
+/* 音频之间的桥接叙事句 */
+.audio-bridge {
+    text-align: center; font-size: clamp(22px, 3vw, 28px); font-weight: 600;
+    color: #424245; font-style: italic; line-height: 1.5; padding: 0 20px;
+}
+
+
+
+/* ================== 收官视频模块 (Audiovisual Story) ================== */
+.ed-video-section {
+    max-width: 1000px; margin: 20px auto 140px auto; padding: 0 40px;
+}
+.ed-video-intro {
+    max-width: 760px; margin: 0 auto 44px auto; text-align: center;
+}
+.ed-video-label {
+    display: inline-block; margin-bottom: 14px; font-size: 13px; font-weight: 700;
+    color: #0071e3; text-transform: uppercase; letter-spacing: 1.5px;
+}
+.ed-video-intro h2 {
+    font-size: clamp(30px, 4.2vw, 48px); font-weight: 800; color: #1d1d1f;
+    letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 16px;
+}
+.ed-video-intro p {
+    font-size: 20px; line-height: 1.7; color: #424245;
+}
+.ed-video-card {
+    background: linear-gradient(180deg, #121826 0%, #0b0f19 100%);
+    border-radius: 28px; padding: 28px;
+    box-shadow: 0 24px 60px rgba(11, 15, 25, 0.18);
+    border: 1px solid rgba(0,0,0,0.06);
+}
+.ed-video-frame {
+    position: relative; width: 100%; aspect-ratio: 16 / 9;
+    border-radius: 20px; overflow: hidden; background: #000;
+}
+.ed-video-frame video {
+    width: 100%; height: 100%; object-fit: cover; display: block; background: #000;
+}
+.ed-video-meta {
+    display: grid; grid-template-columns: 1.25fr 1fr; gap: 28px;
+    margin-top: 24px; align-items: start;
+}
+.ed-video-copy h3 {
+    font-size: clamp(22px, 3vw, 30px); font-weight: 700; color: rgba(255,255,255,0.96);
+    letter-spacing: -0.01em; line-height: 1.25; margin-bottom: 12px;
+}
+.ed-video-copy p {
+    font-size: 17px; line-height: 1.7; color: rgba(255,255,255,0.78);
+}
+.ed-video-notes {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 18px; padding: 18px 20px;
+}
+.ed-video-notes-title {
+    font-size: 12px; font-weight: 700; color: #9fb2ff; text-transform: uppercase;
+    letter-spacing: 1.4px; margin-bottom: 12px;
+}
+.ed-video-notes p {
+    font-size: 14px; line-height: 1.65; color: rgba(255,255,255,0.72); margin-bottom: 10px;
+}
+.ed-video-notes p:last-child { margin-bottom: 0; }
+
+/* ================== References section ================== */
+.references-section {
+    position: relative; z-index: 12; width: 100vw; background: transparent;
+    color: #1d1d1f; padding: 40px 0 120px 0;
+}
+.references-inner {
+    max-width: 1080px; margin: 0 auto; padding: 0 40px;
+}
+.references-divider {
+    height: 1px; background: rgba(0,0,0,0.08); margin-bottom: 36px;
+}
+.references-kicker {
+    display: inline-block; margin-bottom: 12px; font-size: 13px; font-weight: 700;
+    color: #0071e3; text-transform: uppercase; letter-spacing: 1.5px;
+}
+.references-title {
+    font-size: clamp(30px, 4vw, 48px); font-weight: 800; color: #1d1d1f;
+    letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 16px;
+}
+.references-intro {
+    max-width: 760px; font-size: 18px; line-height: 1.75; color: #424245; margin-bottom: 36px;
+}
+.references-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 18px 28px;
+}
+.reference-item {
+    background: rgba(255,255,255,0.88); border: 1px solid rgba(0,0,0,0.06); border-radius: 18px;
+    padding: 18px 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+}
+.reference-item h4 {
+    font-size: 16px; line-height: 1.45; color: #1d1d1f; margin-bottom: 8px;
+}
+.reference-item p {
+    font-size: 14px; line-height: 1.65; color: #6e6e73; margin-bottom: 8px;
+}
+.reference-item a {
+    color: #0071e3; text-decoration: none; word-break: break-word;
+}
+.reference-item a:hover { text-decoration: underline; }
+.references-note {
+    margin-top: 24px; font-size: 14px; line-height: 1.7; color: #6e6e73;
+}
+
+
+
+@media (max-width: 900px) {
+    .ed-lead-grid { grid-template-columns: 1fr; gap: 40px; }
+    .ed-row { grid-template-columns: 1fr; gap: 40px; margin-bottom: 120px; }
+    .ed-row.reverse { grid-template-columns: 1fr; }
+    .ed-row.reverse .ed-text { order: 1; } 
+    .ed-row.reverse .ed-chart-container { order: 2; }
+    .ed-pull-quote { font-size: clamp(28px, 6vw, 36px); }
+    .ed-pull-quote-wrapper { margin-bottom: 120px; }
+    .featured-audio-card { transform: scale(1); } /* 手机端取消放大防溢出 */
+    .ed-video-meta { grid-template-columns: 1fr; gap: 20px; }
+    .ed-video-card { padding: 18px; border-radius: 22px; }
+    .ed-video-section { padding: 0 20px; }
+    .references-inner { padding: 0 20px; }
+    .references-grid { grid-template-columns: 1fr; }
+}
+
+/* ================== SCENE 9 (终章拷问转场) ================== */
+.s9-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.s9-line {
+    position: absolute; top: 50%; left: 50%; width: 90vw; max-width: 900px;
+    text-align: center; opacity: 0; transform: translate(-50%, -50%) scale(1);
+    will-change: opacity, transform;
+}
+.s9-l1, .s9-l2 { font-size: clamp(24px, 4vw, 42px); color: #424245; font-weight: 500; line-height: 1.4; }
+.s9-l3 { font-size: clamp(20px, 3vw, 32px); color: #86868b; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;}
+.s9-hook { font-size: clamp(26px, 4vw, 36px); color: #424245; line-height: 1.4; }
+.hook-bold {
+    display: block; margin-top: 20px; font-size: clamp(36px, 6vw, 68px); 
+    font-weight: 800; color: #1d1d1f; letter-spacing: -0.02em; line-height: 1.1;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="ed-tooltip" class="ed-tooltip"></div>
+
+<div id="white-bg-overlay"></div>
+<div id="light-dynamic-bg"></div>
+
+<div class="global-scroll-hint" id="globalScrollHint">
+    <div class="mouse-icon"></div>
+    <span id="globalScrollText">Scroll to continue</span>
+</div>
+
+<div id="dynamic-bg"></div>
+<canvas id="particles"></canvas>
+
+<div class="scroll-container" id="scene1">
+    <div class="hero" id="scene1-hero">
+        <div class="title-wrapper">
+            <div class="main-title" id="title1">AI Adoption Is Exploding</div>
+            <div class="second-title" id="title2">Tool — or Psychological Dependence?</div>
+        </div>
+        <div class="subtitle" id="subtitle">
+            Global data shows AI adoption rising at unprecedented speed.<br>
+            As generative AI becomes embedded in everyday life,<br>
+            growing reliance on these systems is beginning to raise new social questions.
+        </div>
+        <div class="author" id="author">
+            Kaiyuan Jiang<br>MA International Journalism<br>University of Lancashire<br>March 2026
+        </div>
+        <div class="scroll" id="initialScroll">Scroll to begin<span>↓</span></div>
+    </div>
+</div>
+
+<div class="scene" id="scene2" style="height: 250vh;">
+    <div class="sticky-panel">
+        <div class="intro-text-box">
+            <h2 class="intro-title" id="intro2-title">Artificial intelligence is entering everyday life</h2>
+            <p class="intro-subtitle" id="intro2-sub">From writing emails to generating images, AI tools are becoming part of daily routines worldwide.</p>
+        </div>
+    </div>
+</div>
+
+<div class="scene" id="scene3" style="height: 350vh;">
+    <div class="sticky-panel">
+        <div class="data-text-wrapper" id="data3-wrapper">
+            <h2 class="data-title" id="data3-title">100 million users in two months.</h2>
+            <div class="data-content" id="data3-content">
+                <div class="big-number" data-target="100000000" id="count1">0</div>
+                <p class="data-desc">ChatGPT broke all records, becoming the fastest-growing consumer application in history.</p>
+                <div class="source">
+                Source: Reuters (UBS analysis) — 
+                <a href="https://www.reuters.com/technology/chatgpt-sets-record-fastest-growing-user-base-analyst-note-2023-02-01/" target="_blank" rel="noopener noreferrer">
+                Read source
+                </a>
+                </div>
+            </div>
+        </div>
+        <div class="chart-box" id="data3-chartBox"><div class="chart-inner"><canvas id="chart1"></canvas></div></div>
+    </div>
+</div>
+
+<div class="scene" id="scene4" style="height: 350vh;">
+    <div class="sticky-panel">
+        <div class="data-text-wrapper" id="data4-wrapper">
+            <h2 class="data-title" id="data4-title">AI platforms are generating billions of visits and rapidly reshaping web traffic.</h2>
+            <div class="data-content" id="data4-content">
+                <div class="big-number" data-target="1000000000" id="count2">0</div>
+                <p class="data-desc">AI is no longer a niche tool; it has become a fundamental layer of internet traffic.</p>
+                <div class="source">
+                Source: Similarweb — 
+                <a href="https://ir.similarweb.com/news-events/press-releases/detail/138/ai-discovery-surges-similarwebs-2025-generative-ai-report-says" target="_blank" rel="noopener noreferrer">
+                Read source
+                </a>
+                </div>
+            </div>
+        </div>
+        <div class="chart-box" id="data4-chartBox"><div class="chart-inner"><canvas id="chart2"></canvas></div></div>
+    </div>
+</div>
+
+<div class="scene" id="scene5" style="height: 350vh;">
+    <div class="sticky-panel">
+        <div class="data-text-wrapper" id="data5-wrapper">
+            <h2 class="data-title" id="data5-title">12% of teenagers seek emotional support.</h2>
+            <div class="data-content" id="data5-content">
+                <p class="data-desc" style="font-size: clamp(18px, 2.5vw, 26px);">Beyond productivity, a new generation is turning to AI for advice and companionship.</p>
+                <div class="source">
+                Source: Pew Research Center — 
+                <a href="https://www.pewresearch.org/internet/2026/02/24/how-teens-use-and-view-ai/" target="_blank" rel="noopener noreferrer">
+                Read source
+                </a>
+                </div>
+            </div>
+        </div>
+        <div class="chart-box" id="data5-chartBox">
+            <div class="doughnut-container">
+                <svg viewBox="0 0 100 100" class="doughnut-svg">
+                    <circle class="circle-bg" cx="50" cy="50" r="42"></circle>
+                    <circle class="circle-line" id="circle-progress-line" cx="50" cy="50" r="42"></circle>
+                </svg>
+                <div class="doughnut-center-text">
+                    <div class="doughnut-number"><span id="count3">0</span><span class="doughnut-percent">%</span></div>
+                    <div class="doughnut-label">Teenagers</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="scene" id="scene6" style="height: 350vh;">
+    <div class="sticky-panel">
+        <div class="transition-box">
+            <div class="trans-line trans-line-1" id="t-line1">AI started as a tool.</div>
+            <div class="trans-line trans-line-2" id="t-line2">Then it became part of everyday decisions.</div>
+            <div class="trans-line trans-line-3" id="t-line3">The next question is more personal.</div>
+        </div>
+    </div>
+</div>
+
+<div class="scene" id="scene7" style="height: 450vh;">
+    <div class="sticky-panel">
+        <div class="s7-container">
+            <div class="s7-layer-text" id="s7-layer1">For many people, artificial intelligence is no longer something new.</div>
+            <div class="s7-layer-text" id="s7-layer2">It has quietly slipped out of research labs and into our daily decisions.</div>
+            <div class="s7-layer-text" id="s7-layer3">From writing emails to making daily decisions, it is fundamentally changing how we live.</div>
+        </div>
+    </div>
+</div>
+
+<div class="scene" id="scene8" style="height: 350vh;">
+    <div class="sticky-panel">
+        <div class="s8-text-box" id="s8-text">
+            The data shows scale.<br>The stories show what that scale feels like.
+        </div>
+    </div>
+</div>
+
+
+<div class="editorial-wrapper">
+
+    <div class="ed-header reveal-up">
+        <h1 class="ed-main-title">How people are using AI in everyday life</h1>
+        <hr class="ed-divider">
+        
+        <div class="ed-lead-grid">
+            <div class="ed-lead-highlight">
+                <span class="ed-lead-sub">AI Is Becoming an Everyday Tool</span>
+                — But How People Use It Is Changing
+            </div>
+            
+            <div class="ed-lead-text">
+                <p>Since the release of generative AI tools, the scale of adoption is already reshaping how people interact with technology.</p>
+                <p>For many people, using AI has become as routine as checking a search engine. It is no longer just a tool for work — it is a system we converse with daily.</p>
+                <p style="margin-top: 40px; color: #86868b; font-size: 18px; font-weight: 500;">But beyond rapid growth, a more important question is emerging:</p>
+                <div class="lead-question"><span class="highlight">How exactly are people using AI today?</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ed-article">
+
+        <div class="ed-row">
+            <div class="ed-text reveal-up">
+                <p>The scale of AI adoption has grown rapidly across both organisations and individual users.</p>
+                <p>What began as a specialised technology used by companies is now <span class="highlight">widely accessible to the public</span>. Tools such as generative AI systems have lowered the barrier to entry, allowing users to interact with AI in simple, conversational ways.</p>
+                <p>This rapid expansion means AI is no longer limited to specialists. From writing emails to summarising information and solving problems, the friction of adopting new technology has largely vanished.</p>
+            </div>
+            <div class="ed-chart-container reveal-up" data-chart="1">
+                <div class="ed-chart-card">
+                    <div class="ed-chart-title">Global AI Adoption</div>
+                    <div class="ed-chart-subtitle">Source: McKinsey Global Survey on AI (2017–2025)</div>
+                    <div style="height: 280px; position: relative;"><canvas id="edChart1"></canvas></div>
+                    <div class="ed-chart-note">2023 marks the beginning of rapid adoption driven by generative AI tools such as ChatGPT.</div>
+                    <div class="ed-tabs">
+                        <div class="ed-tab active" id="tab-ent" onclick="switchData1('enterprise')">Enterprise AI adoption</div>
+                        <div class="ed-tab" id="tab-ind" onclick="switchData1('individual')">Individual AI usage</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ed-pull-quote-wrapper reveal-up">
+            <div class="ed-pull-quote">"I use AI almost every day now — sometimes without even realising it."</div>
+            <div class="ed-pull-quote-sub">For some users, this shift is already unconscious.</div>
+        </div>
+
+        <div class="ed-row reverse">
+            <div class="ed-text reveal-up">
+                <p>However, AI usage is not evenly distributed across society.</p>
+                <p>Younger users are significantly more likely to adopt AI tools, particularly in educational and early career contexts. For many students and young professionals, AI has already become part of daily workflows.</p>
+                <p><span class="highlight">This suggests AI adoption is being driven from the bottom up</span> — by individuals, not institutions.</p>
+            </div>
+            <div class="ed-chart-container reveal-up" data-chart="2">
+                <div class="ed-chart-card">
+                    <div class="ed-chart-title">Who Uses AI</div>
+                    <div class="source">
+                    Source: Pew Research Center -
+                    <a href="https://www.pewresearch.org/short-reads/2025/06/25/34-of-us-adults-have-used-chatgpt-about-double-the-share-in-2023/" target="_blank" rel="noopener noreferrer">
+                    Read source
+                    </a>
+                    </div>
+                    <div style="height: 320px; position: relative;"><canvas id="edChart2"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ed-row">
+            <div class="ed-text reveal-up">
+                <p>The reasons people use AI are also evolving.</p>
+                <p>Most users continue to rely on AI for practical tasks, such as searching for information or generating written content. These uses highlight AI’s role as a productivity tool.</p>
+                <p>However, a growing number of users are beginning to interact with AI in more personal ways. Some turn to AI for advice, problem-solving, or even emotional support.</p>
+                <p><span class="highlight">This marks a shift from task-based use to interaction-based use.</span> Although still a minority, it suggests that AI is increasingly functioning as an interactive system.</p>
+            </div>
+            <div class="ed-chart-container reveal-up" data-chart="3">
+                <div class="ed-chart-card">
+                    <div class="ed-chart-title">Why People Use AI</div>
+                    <div class="ed-chart-subtitle">Sources: Ofcom / AP-NORC / Pew Research Center</div>
+                    <div style="height: 350px; position: relative;"><canvas id="edChart3"></canvas></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="ed-bridge reveal-up">
+            To understand how this shift is experienced in real life, we spoke to people who use AI every day.
+        </div>
+
+    </div>
+
+    <div class="ed-audio-section">
+        
+        <div class="ed-audio-header reveal-up">
+            <h2>Listening to everyday users</h2>
+            <p>How people integrate AI into daily life</p>
+        </div>
+
+        <div class="audio-card reveal-up">
+            <div class="audio-badge">Interview 01</div>
+            <div class="audio-context">An educator explains the subtle shift from using AI for basic material preparation to relying on it to structure ideas.</div>
+            
+            <div class="audio-player-wrapper">
+                <audio controls controlsList="nodownload">
+                    <source src="./采访2.mp3" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                </audio>
+            </div>
+
+            <div class="audio-transcript">
+                <div class="tr-line" data-start="0.399"><span class="time">00:00</span> I first started using AI to support my teaching mainly for preparing materials and organizing lesson content.</div>
+                <div class="tr-line" data-start="12.000"><span class="time">00:12</span> It helped me save time, especially with repetitive tasks.</div>
+                <div class="tr-line" data-start="19.574"><span class="time">00:19</span> At the beginning, I treated it purely as a tool, but over time, I found myself using it more frequently.</div>
+                <div class="tr-line" data-start="30.699"><span class="time">00:30</span> Sometimes to generate examples or to rephrase explanations, it has gradually become part of my daily workflow.</div>
+                <div class="tr-line" data-start="43.235"><span class="time">00:43</span> In some cases, I even rely on it to structure ideas more efficiently.</div>
+            </div>
+        </div>
+
+        <div class="audio-bridge reveal-up">
+            For some users, AI is no longer just a tool.<br>It has become a sounding board for daily life.
+        </div>
+
+        <div class="audio-card featured-audio-card reveal-up">
+            <div class="audio-badge">Interview 02</div>
+            <div class="audio-context">A daily user describes how AI has become a primary responder for both small decisions and reassurance.</div>
+            
+            <div class="audio-player-wrapper">
+                <audio controls controlsList="nodownload">
+                    <source src="./采访1.m4a" type="audio/mp4">
+                    Your browser does not support the audio element.
+                </audio>
+            </div>
+
+            <div class="audio-transcript">
+                <div class="tr-line" data-start="0.320"><span class="time">00:00</span> I think I rely on AI more than I expected.</div>
+                <div class="tr-line" data-start="4.240"><span class="time">00:04</span> If I'm unsure about something, they will ask it first, even for small decisions.</div>
+                <div class="tr-line" data-start="11.120"><span class="time">00:11</span> Sometimes I just want a second opinion or just reassurance.</div>
+                <div class="tr-line" data-start="17.325"><span class="time">00:17</span> It feels like talking to something that always responds.</div>
+                <div class="tr-line" data-start="21.965"><span class="time">00:21</span> I'm not sure if that's a good thing.</div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="ed-video-section">
+        <div class="ed-video-intro reveal-up">
+            <span class="ed-video-label">Audiovisual story</span>
+            <h2>Watch: When an AI Tool Becomes Something People Rely On</h2>
+            <p>The data shows scale. The interviews show experience. This 60-second film brings the two together, tracing how rapid adoption can move from productivity into personal reliance.</p>
+        </div>
+
+        <div class="ed-video-card reveal-up">
+            <div class="ed-video-frame">
+                <video controls preload="metadata" playsinline controlsList="nodownload noplaybackrate" poster="">
+                    <source src="./final.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+
+            <div class="ed-video-meta">
+                <div class="ed-video-copy">
+                    <h3>A closing visual argument</h3>
+                    <p>Rather than repeating the charts, the film compresses the project’s reporting into one final question: once AI becomes a constant responder in everyday life, where should the boundary between assistance and dependence be drawn?</p>
+                </div>
+                <div class="ed-video-notes">
+                    <div class="ed-video-notes-title">Production note</div>
+                    <p>Video by Kaiyuan Jiang. This final sequence is edited entirely from credited YouTube source footage, re-cut into a single closing argument for this project.</p>
+                    <p>All web references used across this project are listed in the final references section below, with live hyperlinks for verification.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="scene" id="scene9" style="height: 400vh;">
+    <div class="sticky-panel">
+        <div class="s9-container">
+            <div class="s9-line s9-l1" id="s9-l1">AI may help us think faster.</div>
+            <div class="s9-line s9-l2" id="s9-l2">But who makes sure it does not begin to think for us?</div>
+            <div class="s9-line s9-l3" id="s9-l3">The final question is no longer technical.</div>
+            <div class="s9-line s9-hook" id="s9-l4">
+                when a system becomes part of how people decide, cope and seek reassurance,<br>
+                <span class="hook-bold">where should the line between tool and dependence be drawn?</span><br>
+                <span style="font-size: 0.5em; font-weight: 500; color:#86868b; display:block; margin-top:30px;">And who gets to draw it?</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<section class="references-section">
+    <div class="references-inner">
+        <div class="references-divider"></div>
+        <span class="references-kicker">References</span>
+        <h2 class="references-title">Sources and links used in this webpage</h2>
+        <p class="references-intro">The links below list the external web sources cited or embedded across the charts, editorial modules and final video notes on this page. Original interview audio is not publicly linked and is therefore not included here.</p>
+
+        <div class="references-grid">
+            <div class="reference-item">
+                <h4>Reuters / UBS — ChatGPT sets record for fastest-growing user base</h4>
+                <p>Used for the opening adoption-speed claim and early mass-user growth context.</p>
+                <a href="https://www.reuters.com/technology/chatgpt-sets-record-fastest-growing-user-base-analyst-note-2023-02-01/" target="_blank" rel="noopener noreferrer">https://www.reuters.com/technology/chatgpt-sets-record-fastest-growing-user-base-analyst-note-2023-02-01/</a>
+            </div>
+            <div class="reference-item">
+                <h4>Similarweb — 2025 Generative AI Report / AI traffic growth</h4>
+                <p>Used for the claim about large-scale global visits to AI tools.</p>
+                <a href="https://ir.similarweb.com/news-events/press-releases/detail/138/ai-discovery-surges-similarwebs-2025-generative-ai-report-says" target="_blank" rel="noopener noreferrer">https://ir.similarweb.com/news-events/press-releases/detail/138/ai-discovery-surges-similarwebs-2025-generative-ai-report-says</a>
+            </div>
+            <div class="reference-item">
+                <h4>Pew Research Center — How teens use and view AI</h4>
+                <p>Used for the emotional-support / advice statistic involving teenagers.</p>
+                <a href="https://www.pewresearch.org/internet/2026/02/24/how-teens-use-and-view-ai/" target="_blank" rel="noopener noreferrer">https://www.pewresearch.org/internet/2026/02/24/how-teens-use-and-view-ai/</a>
+            </div>
+            <div class="reference-item">
+                <h4>Pew Research Center — 34% of U.S. adults have used ChatGPT</h4>
+                <p>Used for the age-based breakdown in the “Who Uses AI” chart.</p>
+                <a href="https://www.pewresearch.org/short-reads/2025/06/25/34-of-us-adults-have-used-chatgpt-about-double-the-share-in-2023/" target="_blank" rel="noopener noreferrer">https://www.pewresearch.org/short-reads/2025/06/25/34-of-us-adults-have-used-chatgpt-about-double-the-share-in-2023/</a>
+            </div>
+            <div class="reference-item">
+                <h4>Stanford HAI — 2025 AI Index Report</h4>
+                <p>Used across the project for macro adoption context and global AI trend framing.</p>
+                <a href="https://hai.stanford.edu/ai-index/2025-ai-index-report" target="_blank" rel="noopener noreferrer">https://hai.stanford.edu/ai-index/2025-ai-index-report</a>
+            </div>
+            <div class="reference-item">
+                <h4>McKinsey — The state of AI in 2022 and a half decade in review</h4>
+                <p>Embedded in the interactive adoption chart data for earlier organizational adoption rates.</p>
+                <a href="https://www.mckinsey.com/~/media/mckinsey/business%20functions/quantumblack/our%20insights/the%20state%20of%20ai%20in%202022%20and%20a%20half%20decade%20in%20review/the-state-of-ai-in-2022-and-a-half-decade-in-review.pdf" target="_blank" rel="noopener noreferrer">McKinsey PDF report</a>
+            </div>
+            <div class="reference-item">
+                <h4>McKinsey — The State of AI</h4>
+                <p>Embedded in the adoption chart for more recent organizational AI use.</p>
+                <a href="https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai" target="_blank" rel="noopener noreferrer">https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai</a>
+            </div>
+            <div class="reference-item">
+                <h4>Ofcom — Gen Z driving early adoption of generative AI</h4>
+                <p>Used in the “Why People Use AI” chart for text generation, image generation and coding use cases.</p>
+                <a href="https://www.ofcom.org.uk/internet-based-services/technology/gen-z-driving-early-adoption-of-gen-ai" target="_blank" rel="noopener noreferrer">https://www.ofcom.org.uk/internet-based-services/technology/gen-z-driving-early-adoption-of-gen-ai</a>
+            </div>
+            <div class="reference-item">
+                <h4>AP-NORC / AP News — How adults are using AI tools</h4>
+                <p>Used in the motivations chart for information-search behaviour.</p>
+                <a href="https://apnews.com/article/229b665d10d057441a69f56648b973e1" target="_blank" rel="noopener noreferrer">https://apnews.com/article/229b665d10d057441a69f56648b973e1</a>
+            </div>
+            <div class="reference-item">
+                <h4>Supplementary chart-source links retained in the page code</h4>
+                <p>These links remain embedded inside the interactive chart datasets and are listed here for transparency.</p>
+                <p><a href="https://learn.g2.com/ai-adoption-statistics" target="_blank" rel="noopener noreferrer">https://learn.g2.com/ai-adoption-statistics</a></p>
+                <p><a href="https://explodingtopics.com/blog/companies-using-ai" target="_blank" rel="noopener noreferrer">https://explodingtopics.com/blog/companies-using-ai</a></p>
+            </div>
+        </div>
+        <p class="references-note">Final video note: the closing film is edited from credited YouTube footage. Those platform-specific video links are acknowledged in the video itself; the list above covers the external reference sources used across the webpage content and chart modules.</p>
+    </div>
+</section>
+<div style="height: 100vh; position: relative; z-index: 3;"></div>
+
+<script>
+
+let inactivityTimer;
+const globalScrollHint = document.getElementById("globalScrollHint");
+const initialScroll = document.getElementById("initialScroll");
+
+function resetInactivityTimer() {
+    globalScrollHint.classList.remove("visible");
+    clearTimeout(inactivityTimer);
+    if (window.scrollY < window.innerHeight * 0.8) return;
+    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 10) return;
+    inactivityTimer = setTimeout(() => { globalScrollHint.classList.add("visible"); }, 3500); 
+}
+window.addEventListener("scroll", resetInactivityTimer);
+window.addEventListener("mousemove", resetInactivityTimer);
+window.addEventListener("touchstart", resetInactivityTimer);
+
+const datasetClipPlugin = {
+    id: 'datasetClip',
+    beforeDatasetsDraw(chart) {
+        if (chart.options.revealProgress !== undefined) {
+            const ctx = chart.ctx; const chartArea = chart.chartArea;
+            ctx.save(); ctx.beginPath();
+            ctx.rect(chartArea.left, chartArea.top - 10, chartArea.width * chart.options.revealProgress, chartArea.bottom - chartArea.top + 20);
+            ctx.clip();
+        }
+    },
+    afterDatasetsDraw(chart) {
+        if (chart.options.revealProgress !== undefined) { chart.ctx.restore(); }
+    }
+};
+Chart.register(datasetClipPlugin);
+
+function animateChartReveal(chart) {
+    let start = null; const duration = 2500;
+    function step(timestamp) {
+        if (!start) start = timestamp;
+        const progress = Math.min((timestamp - start) / duration, 1);
+        chart.options.revealProgress = 1 - Math.pow(1 - progress, 4); 
+        chart.update('none'); 
+        if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+}
+
+function animateDoughnutSync(targetValue) {
+    const numEl = document.getElementById("count3"), lineEl = document.getElementById("circle-progress-line");
+    const circumference = 2 * Math.PI * 42; 
+    let start = null; const duration = 2500;
+    function step(timestamp) {
+        if (!start) start = timestamp;
+        const ease = 1 - Math.pow(1 - Math.min((timestamp - start) / duration, 1), 4); 
+        numEl.innerText = Math.floor(ease * targetValue);
+        const targetOffset = circumference * (1 - (targetValue / 100));
+        lineEl.style.strokeDashoffset = circumference - (circumference - targetOffset) * ease;
+        if (ease < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+}
+
+function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
+function getScrollProgress(sceneId) {
+    const el = document.getElementById(sceneId);
+    if (!el) return 0;
+    const rect = el.getBoundingClientRect();
+    const scrollHeight = el.offsetHeight - window.innerHeight;
+    if (rect.top > 0) return 0;
+    if (rect.top < -scrollHeight) return 1;
+    return Math.abs(rect.top) / scrollHeight;
+}
+function animateNumber(id, target) {
+    let el = document.getElementById(id);
+    if(!el) return;
+    let start = 0; let duration = 2000; let step = target / (duration / 16);
+    function update() {
+        start += step;
+        if (start >= target) { el.innerText = target; return; }
+        el.innerText = Math.floor(start); requestAnimationFrame(update);
+    }
+    update();
+}
+
+window.globalBgFade = 0;
+
+window.addEventListener("scroll", () => {
+    
+    const scene8 = document.getElementById("scene8");
+    if(scene8) {
+        const s8Rect = scene8.getBoundingClientRect();
+        const s8ScrollHeight = scene8.offsetHeight - window.innerHeight;
+        if (s8Rect.top > 0) {
+            window.globalBgFade = 0;
+        } else if (s8Rect.top < -s8ScrollHeight) {
+            window.globalBgFade = 1;
+        } else {
+            const p8 = Math.abs(s8Rect.top) / s8ScrollHeight;
+            if (p8 < 0.4) window.globalBgFade = 0;
+            else if (p8 < 0.75) window.globalBgFade = (p8 - 0.4) / 0.35;
+            else window.globalBgFade = 1;
+        }
+    }
+
+    const isMobile = window.innerWidth < 768;
+    const p1Max = window.innerHeight;
+    const progress1 = clamp(window.scrollY / p1Max, 0, 1);
+    
+    document.getElementById("title1").style.transform = `scale(${1-(progress1*0.45)}) translateY(${progress1*-120}px)`;
+    document.getElementById("title2").style.transform = `scale(${1-(progress1*0.45)}) translateY(${progress1*-110}px)`;
+    document.getElementById("subtitle").style.opacity = progress1 > 0.45 ? 1 : 0;
+    document.getElementById("subtitle").style.transform = progress1 > 0.45 ? "translateY(0)" : "translateY(20px)";
+    document.getElementById("author").style.opacity = progress1 > 0.6 ? 1 : 0;
+    
+    if(initialScroll) initialScroll.style.opacity = 1 - clamp(progress1 * 3, 0, 1);
+    document.getElementById("scene1-hero").style.opacity = 1 - clamp((window.scrollY - p1Max * 1.5) / (p1Max * 0.5), 0, 1);
+
+    function updateIntroScene(sceneId, titleId, subId) {
+        const p = getScrollProgress(sceneId);
+        const titleBox = document.getElementById(titleId), subBox = document.getElementById(subId);
+        if(!titleBox) return;
+        titleBox.style.transform = `scale(${1 - clamp(p * 0.5, 0, 0.3)})`;
+        subBox.style.opacity = clamp((p - 0.4) / 0.4, 0, 1);
+        subBox.style.transform = `translateY(${(1 - clamp((p - 0.4) / 0.4, 0, 1)) * 30}px)`;
+    }
+    updateIntroScene("scene2", "intro2-title", "intro2-sub");
+
+    const p6 = getScrollProgress("scene6");
+    const l1 = document.getElementById("t-line1"), l2 = document.getElementById("t-line2"), l3 = document.getElementById("t-line3");
+    if(l1) {
+        l1.style.opacity = clamp(p6 / 0.15, 0, 1);
+        l2.style.opacity = clamp((p6 - 0.2) / 0.15, 0, 1);
+        l3.style.opacity = clamp((p6 - 0.4) / 0.15, 0, 1);
+        l3.style.transform = `scale(${1 + clamp((p6 - 0.4) * 0.3, 0, 0.15)})`;
+
+        const textFadeOut = 1 - clamp((p6 - 0.75) / 0.2, 0, 1);
+        l1.style.opacity = Math.min(l1.style.opacity, textFadeOut);
+        l2.style.opacity = Math.min(l2.style.opacity, textFadeOut);
+        l3.style.opacity = Math.min(l3.style.opacity, textFadeOut);
+    }
+
+    function updateDataScene(sceneId, wrapperId, titleId, contentId, chartBoxId, chartIndex) {
+        const p = getScrollProgress(sceneId);
+        const scene = document.getElementById(sceneId), wrapper = document.getElementById(wrapperId), titleBox = document.getElementById(titleId), contentBox = document.getElementById(contentId), chartBox = document.getElementById(chartBoxId);
+        if(!scene) return;
+
+        titleBox.style.opacity = clamp(p / 0.15, 0, 1);
+        contentBox.style.opacity = clamp((p - 0.15) / 0.2, 0, 1);
+        
+        if (p > 0.2 && !scene.dataset.counted && chartIndex !== 3) {
+            animateNumber(contentBox.querySelector('.big-number').id, parseInt(contentBox.querySelector('.big-number').dataset.target));
+            scene.dataset.counted = "true";
+        }
+
+        const shiftP = clamp((p - 0.5) / 0.3, 0, 1);
+        if (!isMobile) {
+            wrapper.style.transform = `translate(calc(-50% + ${shiftP * -26}vw), -50%) scale(${1 - (shiftP * 0.25)})`;
+            chartBox.style.opacity = shiftP;
+            chartBox.style.transform = `translateY(-50%) translateX(${(1 - shiftP) * 80}px)`;
+        } else {
+            wrapper.style.transform = `translate(-50%, calc(-50% + ${shiftP * -22}vh)) scale(${1 - (shiftP * 0.15)})`;
+            chartBox.style.opacity = shiftP;
+            chartBox.style.transform = `translateX(-50%) translateY(calc(12vh + ${(1 - shiftP) * 60}px))`;
+        }
+
+        if (p > 0.65 && !scene.dataset.charted) {
+            if(chartIndex === 1) animateChartReveal(initChartD1());
+            if(chartIndex === 2) animateChartReveal(initChartD2());
+            if(chartIndex === 3) animateDoughnutSync(12);
+            scene.dataset.charted = "true";
+        }
+    }
+    updateDataScene("scene3", "data3-wrapper", "data3-title", "data3-content", "data3-chartBox", 1);
+    updateDataScene("scene4", "data4-wrapper", "data4-title", "data4-content", "data4-chartBox", 2);
+    updateDataScene("scene5", "data5-wrapper", "data5-title", "data5-content", "data5-chartBox", 3);
+
+    const p7 = getScrollProgress("scene7");
+    const layers = [document.getElementById("s7-layer1"), document.getElementById("s7-layer2"), document.getElementById("s7-layer3")];
+    if(layers[0]) {
+        const centers = [0.18, 0.48, 0.78]; 
+        layers.forEach((item, i) => {
+            const c = centers[i];
+            let op = 0, sc = 1, y = 0, blur = 0;
+            if (p7 < c - 0.18) { op = 0; sc = 1.15; y = 40; blur = 10; }
+            else if (p7 >= c - 0.18 && p7 <= c) {
+                const prog = (p7 - (c - 0.18)) / 0.18; 
+                op = prog; sc = 1.15 - prog * 0.15; y = 40 - prog * 40; blur = 10 - prog * 10;
+            } else if (p7 > c) {
+                const fadeOutLength = i === 2 ? 0.4 : 0.3; 
+                if (p7 <= c + fadeOutLength) {
+                    const prog = (p7 - c) / fadeOutLength; 
+                    op = 1 - Math.pow(prog, 3); 
+                    sc = 1 - prog * 0.15; 
+                    y = prog * -60; 
+                    blur = prog * 5;
+                } else { op = 0; }
+            }
+            item.style.opacity = op;
+            item.style.transform = `translate(-50%, calc(-50% + ${y}px)) scale(${sc})`;
+            item.style.filter = `blur(${blur}px)`;
+        });
+    }
+
+    const p8 = getScrollProgress("scene8");
+    const s8Text = document.getElementById("s8-text");
+    if(s8Text) {
+        if (p8 < 0.2) {
+            const prog = p8 / 0.2;
+            s8Text.style.opacity = prog;
+            s8Text.style.transform = `translate(-50%, calc(-50% + ${(1 - prog) * 30}px)) scale(1)`;
+            s8Text.style.color = `rgba(255, 255, 255, 0.92)`;
+        } else if (p8 < 0.4) {
+            s8Text.style.opacity = 1;
+            s8Text.style.transform = `translate(-50%, -50%) scale(1)`;
+            s8Text.style.color = `rgba(255, 255, 255, 0.92)`;
+        } else if (p8 < 0.75) {
+            const prog = (p8 - 0.4) / 0.35; 
+            s8Text.style.opacity = 1;
+            s8Text.style.transform = `translate(-50%, -50%) scale(${1 + prog * 0.15})`;
+            s8Text.style.color = `rgb(${Math.floor(255 - prog * 226)}, ${Math.floor(255 - prog * 226)}, ${Math.floor(255 - prog * 224)})`;
+        } else if (p8 <= 1) {
+            const fadeProg = (p8 - 0.75) / 0.25;
+            s8Text.style.opacity = 1 - fadeProg;
+            s8Text.style.transform = `translate(-50%, calc(-50% - ${fadeProg * 60}px)) scale(1.15)`;
+            s8Text.style.color = `rgb(29, 29, 31)`;
+        }
+    }
+
+    const p9 = getScrollProgress("scene9");
+    const l9_1 = document.getElementById("s9-l1"), l9_2 = document.getElementById("s9-l2"), l9_3 = document.getElementById("s9-l3"), l9_4 = document.getElementById("s9-l4");
+    
+    if(l9_1 && p9 > 0) {
+        l9_1.style.opacity = clamp(p9 / 0.1, 0, 1) - clamp((p9 - 0.2) / 0.1, 0, 1);
+        l9_1.style.transform = `translate(-50%, calc(-50% - ${p9 * 50}px)) scale(${1 + p9*0.1})`;
+        
+        l9_2.style.opacity = clamp((p9 - 0.25) / 0.1, 0, 1) - clamp((p9 - 0.45) / 0.1, 0, 1);
+        l9_2.style.transform = `translate(-50%, calc(-50% - ${(p9-0.25) * 50}px)) scale(${1 + (p9-0.25)*0.1})`;
+        
+        l9_3.style.opacity = clamp((p9 - 0.5) / 0.1, 0, 1) - clamp((p9 - 0.7) / 0.1, 0, 1);
+        l9_3.style.transform = `translate(-50%, calc(-50% - ${(p9-0.5) * 50}px)) scale(${1 + (p9-0.5)*0.1})`;
+        
+        l9_4.style.opacity = clamp((p9 - 0.75) / 0.15, 0, 1);
+        l9_4.style.transform = `translate(-50%, -50%) scale(${1 + clamp((p9-0.75)*0.1, 0, 0.05)})`;
+    }
+
+    document.getElementById("white-bg-overlay").style.opacity = window.globalBgFade;
+    document.getElementById("light-dynamic-bg").style.opacity = window.globalBgFade;
+    
+    if (window.globalBgFade > 0.5) { globalScrollHint.classList.add("dark-mode"); } 
+    else { globalScrollHint.classList.remove("dark-mode"); }
+});
+
+const commonChartOptionsDark = { responsive: true, maintainAspectRatio: false, animation: false, revealProgress: 0, plugins: { legend: { display: false } }, scales: { y: { grid: { color: "rgba(255,255,255,0.08)" }, ticks: { color: "#cbd5e1" } }, x: { grid: { display: false }, ticks: { color: "#cbd5e1" } } } };
+function initChartD1() { return new Chart(document.getElementById("chart1"), { type: "line", data: { labels: ["Launch", "Week 2", "Week 4", "Month 2"], datasets: [{ data: [1, 10, 50, 100], borderColor: "#60a5fa", borderWidth: 4, tension: 0.5, pointRadius: 5, backgroundColor: "rgba(96, 165, 250, 0.15)", fill: true }] }, options: commonChartOptionsDark }); }
+function initChartD2() { return new Chart(document.getElementById("chart2"), { type: "line", data: { labels: ["Q1 '23", "Q3 '23", "Q1 '24", "Q4 '24"], datasets: [{ data: [15, 35, 70, 100], borderColor: "#34d399", borderWidth: 4, tension: 0.5, pointRadius: 5, backgroundColor: "rgba(52, 211, 153, 0.15)", fill: true }] }, options: commonChartOptionsDark }); }
+
+const canvas = document.getElementById("particles"), ctx = canvas.getContext("2d");
+let w = canvas.width = window.innerWidth, h = canvas.height = window.innerHeight;
+let particles = [];
+for(let i=0; i<80; i++){ particles.push({ x: Math.random() * w, y: Math.random() * h, vx: (Math.random() - .5) * 0.3, vy: (Math.random() - .5) * 0.3 }); }
+function draw(){
+    ctx.clearRect(0,0,w,h);
+    const pR = 120 + window.globalBgFade * (0 - 120);
+    const pG = 140 + window.globalBgFade * (113 - 140);
+    const pB = 255 + window.globalBgFade * (227 - 255);
+    const fillAlpha = 0.6 - window.globalBgFade * 0.4; 
+    const strokeAlpha = 0.08 + window.globalBgFade * 0.07; 
+    
+    particles.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        if(p.x < 0 || p.x > w) p.vx *= -1; if(p.y < 0 || p.y > h) p.vy *= -1;
+        ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI*2); ctx.fillStyle = `rgba(${pR}, ${pG}, ${pB}, ${fillAlpha})`; ctx.fill();
+    });
+    for(let i=0; i<particles.length; i++){
+        for(let j=i+1; j<particles.length; j++){
+            let dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y;
+            if(Math.sqrt(dx*dx + dy*dy) < 100){
+                ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y); ctx.strokeStyle = `rgba(${pR}, ${pG}, ${pB}, ${strokeAlpha})`; ctx.stroke();
+            }
+        }
+    }
+    requestAnimationFrame(draw);
+}
+draw();
+window.addEventListener("resize", () => { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; window.dispatchEvent(new Event('scroll')); });
+
+const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            if (entry.target.dataset.chart === "1" && !entry.target.dataset.rendered) { createEdChart1(edDatasets1['enterprise']); entry.target.dataset.rendered = "true"; }
+            if (entry.target.dataset.chart === "2" && !entry.target.dataset.rendered) { createEdChart2(); entry.target.dataset.rendered = "true"; }
+            if (entry.target.dataset.chart === "3" && !entry.target.dataset.rendered) { createEdChart3(); entry.target.dataset.rendered = "true"; }
+        }
+    });
+}, { threshold: 0.2 }); 
+document.querySelectorAll('.reveal-up').forEach(el => revealObserver.observe(el));
+
+let edLocked = false; const edTooltip = document.getElementById("ed-tooltip");
+function showEdTooltip(event, label, value, source) {
+    edTooltip.style.display = "block";
+    edTooltip.innerHTML = `<div class="ed-tt-title">${label}</div><div class="ed-tt-value">${value}%</div><div class="ed-tt-desc">${source.text}</div><div class="ed-tt-source">Source: ${source.name}</div><div class="ed-tt-link"><a href="${source.url}" target="_blank" rel="noopener noreferrer">Read source</a></div>`;
+    edTooltip.style.left = event.pageX + 15 + "px"; edTooltip.style.top = event.pageY - 20 + "px";
+}
+function hideEdTooltip() { if (!edLocked) edTooltip.style.display = "none"; }
+function handleChartClick(e, chartInstance) { const points = chartInstance.getElementsAtEventForMode(e, 'nearest', {intersect: true}, true); if (points.length) { edLocked = true; } else { edLocked = false; edTooltip.style.display = "none"; } }
+
+const edDatasets1 = {
+    enterprise:{
+        years:["2017","2018","2019","2020","2021","2022","2023","2024","2025"],
+        values:[20,47,58,50,56,50,55,78,88],
+        sources:[
+            {
+                text:"20% of organizations reported adopting AI in at least one business area.",
+                name:"McKinsey《State of AI 2022》",
+                url:"https://www.mckinsey.com/~/media/mckinsey/business%20functions/quantumblack/our%20insights/the%20state%20of%20ai%20in%202022%20and%20a%20half%20decade%20in%20review/the-state-of-ai-in-2022-and-a-half-decade-in-review.pdf"
+            },
+            {
+                text:"AI adoption doubled from 2017 to 2018 based on McKinsey data.",
+                name:"McKinsey AI review",
+                url:"https://learn.g2.com/ai-adoption-statistics"
+            },
+            {
+                text:"The adoption rate peaked at 58% in 2019.",
+                name:"McKinsey AI review",
+                url:"https://learn.g2.com/ai-adoption-statistics"
+            },
+            {
+                text:"AI adoption dropped slightly during transition from experimentation to scaling.",
+                name:"McKinsey survey time series",
+                url:"https://learn.g2.com/ai-adoption-statistics"
+            },
+            {
+                text:"56% of organizations reported adopting AI in at least one business function.",
+                name:"McKinsey survey time series",
+                url:"https://learn.g2.com/ai-adoption-statistics"
+            },
+            {
+                text:"Adoption plateaued around 50% between 2020 and 2022.",
+                name:"McKinsey《State of AI 2022》",
+                url:"https://www.mckinsey.com/~/media/mckinsey/business%20functions/quantumblack/our%20insights/the%20state%20of%20ai%20in%202022%20and%20a%20half%20decade%20in%20review/the-state-of-ai-in-2022-and-a-half-decade-in-review.pdf"
+            },
+            {
+                text:"55% of organizations reported using AI.",
+                name:"McKinsey State of AI survey",
+                url:"https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai"
+            },
+            {
+                text:"78% of organizations reported using AI.",
+                name:"McKinsey survey",
+                url:"https://explodingtopics.com/blog/companies-using-ai"
+            },
+            {
+                text:"88% of organizations report regular AI use.",
+                name:"McKinsey survey",
+                url:"https://explodingtopics.com/blog/companies-using-ai"
+            }
+        ]
+    },
+
+    individual:{
+        years:["2023","2024","2025"],
+        values:[5,12,16],
+        sources:[
+            {
+                text:"Public use of generative AI tools began rising rapidly following the release of ChatGPT.",
+                name:"Stanford AI Index 2025",
+                url:"ttps://hai.stanford.edu/ai-index/2025-ai-index-report"
+            },
+            {
+                text:"Consumer adoption of AI tools increased significantly in 2024.",
+                name:"Stanford AI Index 2025",
+                url:"https://hai.stanford.edu/ai-index/2025-ai-index-report"
+            },
+            {
+                text:"Around one in six people globally now use generative AI tools.",
+                name:"Stanford AI Index 2025",
+                url:"https://hai.stanford.edu/ai-index/2025-ai-index-report"
+            }
+        ]
+    }
+};
+let edChart1Instance;
+function createEdChart1(data) {
+    const ctx = document.getElementById("edChart1"); if(edChart1Instance) edChart1Instance.destroy();
+    edChart1Instance = new Chart(ctx, { type: "line", data: { labels: data.years, datasets: [{ data: data.values, borderWidth: 3, borderColor: "#0071e3", pointRadius: 5, pointHoverRadius: 8, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, animation: {duration: 1500, easing: 'easeOutQuart'}, plugins: { legend: { display: false } }, interaction: { mode: 'nearest', intersect: true }, scales: { y: { beginAtZero: true, title: { display: true, text: "Adoption (%)", color: '#86868b' }, grid: {color: 'rgba(0,0,0,0.05)'}, ticks: {color: '#86868b'} }, x: { grid: {display: false}, ticks: {color: '#86868b'} } }, onHover: (event, elements) => { if(elements.length){ const idx = elements[0].index; showEdTooltip(event.native, data.years[idx], data.values[idx], data.sources[idx]); edChart1Instance.data.datasets[0].pointBackgroundColor = data.values.map((v,i)=> i===idx ? "#0071e3" : "rgba(0,0,0,0.1)"); edChart1Instance.update(); } else { hideEdTooltip(); edChart1Instance.data.datasets[0].pointBackgroundColor = "#0071e3"; edChart1Instance.update(); } } } }); ctx.onclick = (e) => handleChartClick(e, edChart1Instance);
+}
+function switchData1(type) {
+    document.getElementById("tab-ent").classList.remove("active"); document.getElementById("tab-ind").classList.remove("active");
+    if(type==="enterprise") document.getElementById("tab-ent").classList.add("active"); else document.getElementById("tab-ind").classList.add("active");
+    edLocked = false; edTooltip.style.display = "none"; createEdChart1(edDatasets1[type]);
+}
+
+const edDataset2 = { labels:["18–29","30–49","50–64","65+"], values:[58,41,25,10], sources:[ {text:"58% of adults under 30 say they have used ChatGPT.", name:"Pew Research Center", url:"https://www.pewresearch.org/short-reads/2025/06/25/34-of-us-adults-have-used-chatgpt-about-double-the-share-in-2023/"}, {text:"41% of adults aged 30–49 report using ChatGPT.", name:"Pew Research Center", url:"https://www.pewresearch.org/short-reads/2025/06/25/34-of-us-adults-have-used-chatgpt-about-double-the-share-in-2023/"}, {text:"25% of adults aged 50–64 say they have used ChatGPT.", name:"Pew Research Center", url:"https://www.pewresearch.org/short-reads/2025/06/25/34-of-us-adults-have-used-chatgpt-about-double-the-share-in-2023/"}, {text:"Only 10% of adults aged 65+ report using ChatGPT.", name:"Pew Research Center", url:"https://www.pewresearch.org/short-reads/2025/06/25/34-of-us-adults-have-used-chatgpt-about-double-the-share-in-2023/"} ] };
+let edChart2Instance;
+function createEdChart2() {
+    const ctx = document.getElementById("edChart2");
+    edChart2Instance = new Chart(ctx, { type: "bar", data: { labels: edDataset2.labels, datasets: [{ data: edDataset2.values, backgroundColor: "#0071e3", borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, animation: {duration: 1500, easing: 'easeOutQuart'}, plugins: { legend: { display: false } }, interaction: { mode: 'nearest', intersect: true }, scales: { y: { beginAtZero: true, title: { display: true, text: "Share (%)", color: '#86868b' }, grid: {color: 'rgba(0,0,0,0.05)'}, ticks: {color: '#86868b'} }, x: { grid: {display: false}, ticks: {color: '#86868b'} } }, onHover: (event, elements) => { if(elements.length){ const idx = elements[0].index; showEdTooltip(event.native, edDataset2.labels[idx], edDataset2.values[idx], edDataset2.sources[idx]); edChart2Instance.data.datasets[0].backgroundColor = edDataset2.values.map((v,i)=> i===idx ? "#0071e3" : "rgba(0,113,227,0.3)"); edChart2Instance.update(); } else { hideEdTooltip(); edChart2Instance.data.datasets[0].backgroundColor = "#0071e3"; edChart2Instance.update(); } } } }); ctx.onclick = (e) => handleChartClick(e, edChart2Instance);
+}
+
+const edDataset3 = { labels: ["Info search", "Text gen", "Image gen", "Coding", "Emotional support"], values: [60,20,20,11,12], sources: [ {text:"60% say they use AI tools to search for information.", name:"AP-NORC survey", url:"https://apnews.com/article/229b665d10d057441a69f56648b973e1"}, {text:"20% use generative AI to produce text content.", name:"Ofcom", url:"https://www.ofcom.org.uk/internet-based-services/technology/gen-z-driving-early-adoption-of-gen-ai"}, {text:"20% say they generate images using AI tools.", name:"Ofcom", url:"https://www.ofcom.org.uk/internet-based-services/technology/gen-z-driving-early-adoption-of-gen-ai"}, {text:"11% report using generative AI for coding tasks.", name:"Ofcom", url:"https://www.ofcom.org.uk/internet-based-services/technology/gen-z-driving-early-adoption-of-gen-ai"}, {text:"12% of U.S. teens have used AI chatbots for emotional support or advice.", name:"Pew Research Center", url:"https://www.pewresearch.org/internet/2026/02/24/how-teens-use-and-view-ai/"} ] };
+let edChart3Instance;
+function createEdChart3() {
+    const ctx = document.getElementById("edChart3");
+    edChart3Instance = new Chart(ctx, { type: "bar", data: { labels: edDataset3.labels, datasets: [{ data: edDataset3.values, backgroundColor: "#0071e3", borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, indexAxis: "y", animation: {duration: 1500, easing: 'easeOutQuart'}, plugins: { legend: { display: false } }, interaction: { mode: 'nearest', intersect: true }, scales: { x: { beginAtZero: true, title: { display: true, text: "Share of users (%)", color: '#86868b' }, grid: {color: 'rgba(0,0,0,0.05)'}, ticks: {color: '#86868b'} }, y: { grid: {display: false}, ticks: {color: '#86868b'} } }, onHover: (event, elements) => { if(elements.length){ const idx = elements[0].index; showEdTooltip(event.native, edDataset3.labels[idx], edDataset3.values[idx], edDataset3.sources[idx]); edChart3Instance.data.datasets[0].backgroundColor = edDataset3.values.map((v,i)=> i===idx ? "#0071e3" : "rgba(0,113,227,0.3)"); edChart3Instance.update(); } else { hideEdTooltip(); edChart3Instance.data.datasets[0].backgroundColor = "#0071e3"; edChart3Instance.update(); } } } }); ctx.onclick = (e) => handleChartClick(e, edChart3Instance);
+}
+
+
+function setupAudioTranscriptSync() {
+    const cards = document.querySelectorAll('.audio-card');
+    cards.forEach((card) => {
+        const audio = card.querySelector('audio');
+        const lines = Array.from(card.querySelectorAll('.audio-transcript .tr-line[data-start]'));
+        if (!audio || !lines.length) return;
+
+        const starts = lines.map(line => parseFloat(line.dataset.start || '0')).sort((a, b) => a - b);
+
+        function updateActiveLine() {
+            const t = audio.currentTime || 0;
+            let activeIndex = -1;
+            for (let i = 0; i < lines.length; i++) {
+                const currentStart = parseFloat(lines[i].dataset.start || '0');
+                const nextStart = i < lines.length - 1 ? parseFloat(lines[i + 1].dataset.start || '99999') : 99999;
+                if (t >= currentStart && t < nextStart) {
+                    activeIndex = i;
+                    break;
+                }
+            }
+
+            lines.forEach((line, index) => {
+                line.classList.toggle('active-tr', index === activeIndex);
+            });
+        }
+
+        audio.addEventListener('timeupdate', updateActiveLine);
+        audio.addEventListener('play', updateActiveLine);
+        audio.addEventListener('seeked', updateActiveLine);
+        audio.addEventListener('loadedmetadata', updateActiveLine);
+        audio.addEventListener('ended', () => {
+            lines.forEach(line => line.classList.remove('active-tr'));
+        });
+
+        lines.forEach((line, index) => {
+            line.style.cursor = 'pointer';
+            line.addEventListener('click', () => {
+                audio.currentTime = parseFloat(line.dataset.start || '0');
+                audio.play();
+                updateActiveLine();
+            });
+        });
+
+        updateActiveLine();
+    });
+}
+
+setupAudioTranscriptSync();
+
+</script>
+</body>
+</html>
